@@ -35,12 +35,16 @@ releases:
         pullPolicy: "IfNotPresent"
       resources:
         limits:
-          cpu: "100m"
-          memory: "100Mi"
+          cpu: '{{ env "KUBERNETES_DASHBOARD_LIMIT_CPU" | default "100m" }}'
+          memory: '{{ env "KUBERNETES_DASHBOARD_LIMIT_MEMORY" | default "100Mi" }}'
         requests:
-          cpu: "50m"
-          memory: "50Mi"
+          cpu: '{{ env "KUBERNETES_DASHBOARD_REQUEST_CPU" | default "50m" }}'
+          memory: '{{ env "KUBERNETES_DASHBOARD_REQUEST_MEMORY" | default "50Mi" }}'
       rbac:
-        create: false
+        ### Optional: RBAC_ENABLED;
+        create: {{ env "RBAC_ENABLED" | default "false" }}
       serviceAccount:
-        create: true
+        ### Optional: RBAC_ENABLED;
+        create: {{ env "RBAC_ENABLED" | default "false" }}
+        ### Optional: KUBERNETES_DASHBOARD_SERVICE_ACCOUNT_NAME;
+        name: '{{ env "KUBERNETES_DASHBOARD_SERVICE_ACCOUNT_NAME" | default "" }}'

@@ -28,20 +28,21 @@ releases:
   version: "0.0.29"
   wait: true
   values:
-    - rbacEnable: false
+      ### Optional: RBAC_ENABLED;
+    - rbacEnable: {{ env "RBAC_ENABLED" | default "false" }}
       jobLabel: "prometheus-operator"
       image:
         repository: "quay.io/coreos/prometheus-operator"
         ### Optional: PROMETHEUS_OPERATOR_IMAGE_TAG; e.g. v0.20.0
-        tag: '{{ env "PROMETHEUS_OPERATOR_IMAGE_TAG" | default "v0.20.0" }}'
+        tag: '{{ env "PROMETHEUS_OPERATOR_IMAGE_TAG" | default "v0.23.2" }}'
         pullPolicy: "IfNotPresent"
       resources:
         limits:
-          cpu: "10m"
-          memory: "64Mi"
+          cpu: '{{ env "PROMETHEUS_OPERATOR_LIMIT_CPU" | default "10m" }}'
+          memory: '{{ env "PROMETHEUS_OPERATOR_LIMIT_MEMORY" | default "64Mi" }}'
         requests:
-          cpu: "5m"
-          memory: "32Mi"
+          cpu: '{{ env "PROMETHEUS_OPERATOR_REQUEST_CPU" | default "5m" }}'
+          memory: '{{ env "PROMETHEUS_OPERATOR_REQUEST_MEMORY" | default "32Mi" }}'
       global:
         hyperkube:
           repository: "quay.io/coreos/hyperkube"
@@ -51,7 +52,7 @@ releases:
       prometheusConfigReloader:
         repository: "quay.io/coreos/prometheus-config-reloader"
         ### Optional: PROMETHEUS_OPERATOR_PROMETHEUS_CONFIG_RELOADER_IMAGE_TAG; e.g. v0.20.0
-        tag: '{{ env "PROMETHEUS_OPERATOR_PROMETHEUS_CONFIG_RELOADER_IMAGE_TAG" | default "v0.20.0" }}'
+        tag: '{{ env "PROMETHEUS_OPERATOR_PROMETHEUS_CONFIG_RELOADER_IMAGE_TAG" | default "v0.23.2" }}'
       configmapReload:
         repository: "quay.io/coreos/configmap-reload"
         ### Optional: PROMETHEUS_OPERATOR_CONFIGMAP_RELOAD_IMAGE_TAG; e.g. v0.0.1

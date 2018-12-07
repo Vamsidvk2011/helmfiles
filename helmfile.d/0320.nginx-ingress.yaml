@@ -15,13 +15,13 @@ releases:
 
 #
 # References:
-#   - https://github.com/cloudposse/charts/blob/master/incubator/nginx-ingress/values.yaml
+#   - https://github.com/helm/charts/blob/master/stable/nginx-ingress/values.yaml
 #
 - name: "ingress"
   namespace: "kube-system"
   labels:
     chart: "nginx-ingress"
-    repo: "cloudposse-incubator"
+    repo: "stable"
     component: "ingress"
     namespace: "kube-system"
     vendor: "kubernetes"
@@ -60,14 +60,39 @@ releases:
           enabled: {{ env "NGINX_INGRESS_METRICS_ENABLED" | default "false" }}
         metrics:
           enabled: {{ env "NGINX_INGRESS_METRICS_ENABLED" | default "false" }}
+      ### Regexp used to map
+      ### 8080:default/example-tcp-svc:9000,8081:staging/example-tcp-svc:9000
+      ### to
+      ### 8080: default/example-tcp-svc:9000
+      ### 8081: staging/example-tcp-svc:9000
+      ### Optional: NGINX_INGRESS_TCP; e.g. 8080:default/example-tcp-svc:9000,8081:staging/example-tcp-svc:9000
+      tcp:
+      {{- range env "NGINX_INGRESS_TCP" | splitList "," }}
+        {{ regexReplaceAll "(\\d*:)(.*)" . "$1 $2" }}
+      {{- end }}
+      ### Regexp used to map
+      ### 8080:default/example-udp-svc:9000,8081:staging/example-udp-svc:9000
+      ### to
+      ### 8080: default/example-udp-svc:9000
+      ### 8081: staging/example-udp-svc:9000
+      ### Optional: NGINX_INGRESS_UDP; e.g. 8080:default/example-udp-svc:9000,8081:staging/example-udp-svc:9000
+      udp:
+      {{- range env "NGINX_INGRESS_UDP" | splitList "," }}
+        {{ regexReplaceAll "(\\d*:)(.*)" . "$1 $2" }}
+      {{- end }}
+
       defaultBackend:
         enabled: false
       rbac:
-        create: {{ env "NGINX_INGRESS_RBAC_ENABLED" | default "false" }}
+        ### Optional: RBAC_ENABLED;
+        create: {{ env "RBAC_ENABLED" | default "false" }}
       serviceAccount:
-        create: {{ env "NGINX_INGRESS_RBAC_ENABLED" | default "false" }}
+        ### Optional: RBAC_ENABLED;
+        create: {{ env "RBAC_ENABLED" | default "false" }}
+        ### Optional: NGINX_INGRESS_SERVICE_ACCOUNT_NAME;
+        name: '{{ env "NGINX_INGRESS_SERVICE_ACCOUNT_NAME" | default "" }}'
 
-## Workaround until https://github.com/kubernetes/ingress-nginx/pull/2989 would be merged
+## Workaround until https://github.com/kubernetes/ingress-nginx/pull/2989 is merged
     - controller:
         customTemplate:
           configMapName: "ingress-nginx-ingress-controller"
@@ -75,7 +100,7 @@ releases:
   set:
   - name: "controller.config.template"
     file: ./helmfile.d/values/ingress.nginx.template
-## Workaround until https://github.com/kubernetes/ingress-nginx/pull/2989 would be merged
+## Workaround until https://github.com/kubernetes/ingress-nginx/pull/2989 is merged
 
 - name: "ingress-backend"
   namespace: "kube-system"
@@ -149,11 +174,11 @@ releases:
           rules:
           - alert: NginxIngressControllerError
             annotations:
-              description: Nginx ingress controller error.
+              description: Nginx ingress controller error
               summary: NginxIngressControllerError
-            expr: nginx_ingress_controller_errors > 0
+            expr: nginx_ingress_controller_requests > {{ env "NGINX_INGRESS_METRICS_CONTROLLER_ERROR_ALERT" | default "100000" }}
             labels:
-              severity: none
+              severity: warning
 
     serviceMonitors:
       nginx-ingress:
